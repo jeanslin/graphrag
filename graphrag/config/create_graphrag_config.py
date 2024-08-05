@@ -242,6 +242,7 @@ def create_graphrag_config(
                 )
                 deployment_name = reader.str(Fragment.deployment_name)
 
+                # 如果api_key不存在则报错
                 if api_key is None and not _is_azure(llm_type):
                     raise ApiKeyMissingError
                 if _is_azure(llm_type):

@@ -107,6 +107,7 @@ builtin_document_attributes: set[str] = {
 }
 
 
+# 创建流水线配置
 def create_pipeline_config(settings: GraphRagConfig, verbose=False) -> PipelineConfig:
     """Get the default config for the pipeline."""
     # relative to the root_dir

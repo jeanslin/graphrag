@@ -69,31 +69,33 @@ def redact(input: dict) -> str:
 
 
 def index_cli(
-    root: str,
-    init: bool,
-    verbose: bool,
-    resume: str | None,
+    root: str, # 根目录
+    init: bool, # 是否初始化
+    verbose: bool, # 是否打印详细新仙尼
+    resume: str | None, # 用于恢复上次运行的id，先前运行中的镶木地板文件将作为输入加载到系统中，生成这些文件的工作流将被跳过。输入值应该是带时间戳的输出文件夹，例如“20240105-143721”
     memprofile: bool,
-    nocache: bool,
-    reporter: str | None,
-    config: str | None,
-    emit: str | None,
-    dryrun: bool,
-    overlay_defaults: bool,
+    nocache: bool, # 不使用缓存
+    reporter: str | None, # 报告器类型，默认值为rich。有效值为rich、print和none
+    config: str | None, # 配置文件路径
+    emit: str | None, # 指定管道应发出的表输出格式。默认值为parquet。有效值为parquet、csv和json，逗号分隔。
+    dryrun: bool, # “干运行”模式，模拟执行操作但不进行实际修改
+    overlay_defaults: bool, # 是否使用自定义配置覆盖默认配置
     cli: bool = False,
 ):
     """Run the pipeline with the given config."""
     run_id = resume or time.strftime("%Y%m%d-%H%M%S")
+    # 配置日志：日志文件创建及日志参数配置
     _enable_logging(root, run_id, verbose)
+
     progress_reporter = _get_progress_reporter(reporter)
-    if init:
+    if init: # 初始化项目
         _initialize_project_at(root, progress_reporter)
         sys.exit(0)
-    if overlay_defaults:
+    if overlay_defaults: # 是否使用自定义配置
         pipeline_config: str | PipelineConfig = _create_default_config(
             root, config, verbose, dryrun or False, progress_reporter
         )
-    else:
+    else: # 使用默认配置
         pipeline_config: str | PipelineConfig = config or _create_default_config(
             root, None, verbose, dryrun or False, progress_reporter
         )
@@ -101,9 +103,11 @@ def index_cli(
     pipeline_emit = emit.split(",") if emit else None
     encountered_errors = False
 
+    # 运行工作流
     def _run_workflow_async() -> None:
         import signal
 
+        # 处理程序信号
         def handle_signal(signum, _):
             # Handle the signal here
             progress_reporter.info(f"Received signal {signum}, exiting...")
@@ -113,6 +117,9 @@ def index_cli(
             progress_reporter.info("All tasks cancelled. Exiting...")
 
         # Register signal handlers for SIGINT and SIGHUP
+        # 注册信号处理方法
+        # SIGINT：中断信号，当用户按下 Ctrl+C 时，会触发 SIGINT 信号
+        # SIGHUP：挂起信号，通常在终端关闭或控制进程终止时发送给进程，用于通知进程重新初始化或退出
         signal.signal(signal.SIGINT, handle_signal)
 
         if sys.platform != "win32":
