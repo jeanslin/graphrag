@@ -126,11 +126,16 @@ def create_workflow(
     additional_workflows: WorkflowDefinitions | None = None,
     memory_profile: bool = False,
 ) -> Workflow:
-    """Create a workflow from the given config."""
+    """
+        Create a workflow from the given config.
+        合并默认的工作流
+    """
     additional_workflows = {
         **_default_workflows,
         **(additional_workflows or {}),
     }
+
+    """获取工作流实际的步骤"""
     steps = steps or _get_steps_for_workflow(name, config, additional_workflows)
     steps = _remove_disabled_steps(steps)
     return Workflow(
